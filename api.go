@@ -173,7 +173,7 @@ type VirtualMachineDetails struct {
 	Disks                   []Resource `json:"disks,omitempty"`
 	MACAddress              string     `json:"macAddress,omitempty"`
 	DeducedPrivateIPs       []string   `json:"deducedPrivateIps,omitempty"`
-	IPMappings              VMIPMap    `json:"ipMappings,omitempty"`
+	IPMappings              []VMIPMap  `json:"ipMappings,omitempty"`
 }
 
 type OSTemplate struct {
