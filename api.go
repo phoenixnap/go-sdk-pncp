@@ -14,12 +14,13 @@ const (
 type API interface {
 
 	// Account Resources
-	GetAccountDetails() (AccountDetailsFuture, string, bool, uint64, error)
+	GetAccountDetails() (Future, string, bool, uint64, error)
 
 	// Virtual Machine Resources
-	ListVirtualMachinesByAccount() (ResourceListFuture, string, bool, uint64, error)
-	ListVirtualMachinesByNode() (ResourceListFuture, string, bool, uint64, error)
+	ListVirtualMachinesByAccount() (Future, string, bool, uint64, error)
+	ListVirtualMachinesByNode() (Future, string, bool, uint64, error)
 	GetVirtualMachineDetails(id uint64) (Future, string, bool, uint64, error)
+	GetVirtualMachineDetailsURL(url string) (Future, string, bool, uint64, error)
 	CreateVirtualMachine(props CreateVMRequest) (Future, string, bool, uint64, error)
 	SetVirtualMachinePowerState(state string) (Future, string, bool, uint64, error)
 	RebootVirtualMachine(id uint64) (Future, string, bool, uint64, error)
@@ -101,6 +102,7 @@ func NewClient(endpoint, accountid, key, secret, node string, debug bool) *Clien
 		SharedSecret:   secret,
 		NodeID:         node,
 		Debug:          debug,
+		Backoff:        time.Duration(10) * time.Second,
 	}
 }
 
@@ -143,11 +145,11 @@ type CreateVMRequest struct {
 	StorageInGB             uint16   `json:"storageGB"`
 	MemoryInMB              uint32   `json:"memoryMB"`
 	VCpuCount               uint8    `json:"vCPUs"`
-	StorageType             string   `json:"storageType"`
-	PowerStatus             string   `json:"powerStatus"`
-	OperatingSystemTemplate Resource `json:"operatingSystemTemplate"`
-	ImageResource           string   `json:"imageResource"`
-	Password                string   `json:"newOperatingSystemAdminPassword"`
+	StorageType             string   `json:"storageType,omitempty"`
+	PowerStatus             string   `json:"powerStatus,omitempty"`
+	OperatingSystemTemplate Resource `json:"operatingSystemTemplate,omitempty"`
+	ImageResource           string   `json:"imageResource,omitempty"`
+	Password                string   `json:"newOperatingSystemAdminPassword,omitempty"`
 }
 
 type ModifyVMRequest struct {
@@ -156,12 +158,35 @@ type ModifyVMRequest struct {
 	VCpuCount   uint8  `json:"vCPUs"`
 }
 
+type VirtualMachineDetails struct {
+	Name                    string     `json:"name"`
+	Description             string     `json:"description"`
+	StorageInGB             uint16     `json:"storageGB"`
+	MemoryInMB              uint32     `json:"memoryMB"`
+	VCpuCount               uint8      `json:"vCPUs"`
+	StorageType             string     `json:"storageType,omitempty"`
+	PowerStatus             string     `json:"powerStatus,omitempty"`
+	OperatingSystemTemplate Resource   `json:"operatingSystemTemplate,omitempty"`
+	ImageResource           string     `json:"imageResource,omitempty"`
+	NodeResource            Resource   `json:"nodeResource,omitempty"`
+	AccountResource         Resource   `json:"accountResource,omitempty"`
+	Disks                   []Resource `json:"disks,omitempty"`
+	MACAddress              string     `json:"macAddress,omitempty"`
+	DeducedPrivateIPs       []string   `json:"deducedPrivateIps,omitempty"`
+	IPMappings              VMIPMap    `json:"ipMappings,omitempty"`
+}
+
 type OSTemplate struct {
 	Name                         string `json:"name"`
 	Version                      string `json:"version"`
 	MinimumStorageSpaceInGB      uint16 `json:"minimumStorageSpace"`
 	DefaultAdministratorUsername string `json:"defaultAdministratorUsername"`
 	DiskExpandable               bool   `json:"diskExpandable"`
+}
+
+type VMIPMap struct {
+	PrivateIP string
+	PublicIPs []string
 }
 
 type PublicIPSpec struct {
@@ -198,37 +223,4 @@ type PrivateIPAssignmentDesc struct {
 	PublicMapping []string `json:"publicIPMapping"`
 	Node          Resource `json:"nodeResource"`
 	Account       Resource `json:"accountResouce"`
-}
-
-// Futures
-
-type AccountDetailsFuture struct{ Future Future }
-type ResourceFuture struct{ Future Future }
-type ResourceListFuture struct{ Future Future }
-type PublicIPAssignmentDescFuture struct{ Future Future }
-type PrivateIPAssignmentDescFuture struct{ Future Future }
-type OSTemplateFuture struct{ Future Future }
-
-func (f *OSTemplateFuture) Get(v OSTemplate) error {
-	return f.Future.Get(v)
-}
-
-func (f *PrivateIPAssignmentDescFuture) Get(v PrivateIPAssignmentDesc) error {
-	return f.Future.Get(v)
-}
-
-func (f *PublicIPAssignmentDescFuture) Get(v PublicIPAssignmentDesc) error {
-	return f.Future.Get(v)
-}
-
-func (f *ResourceListFuture) Get(v ResourceList) error {
-	return f.Future.Get(v)
-}
-
-func (f *ResourceFuture) Get(v Resource) error {
-	return f.Future.Get(v)
-}
-
-func (f *AccountDetailsFuture) Get(v AccountDetails) error {
-	return f.Future.Get(v)
 }
