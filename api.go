@@ -109,7 +109,7 @@ func NewClient(endpoint, accountid, key, secret, node string, debug bool) *Clien
 type APIError struct {
 	error
 	Retriable bool
-	Eref uint64
+	Eref      uint64
 }
 
 //

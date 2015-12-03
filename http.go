@@ -101,49 +101,49 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (Future, erro
 			log.Printf("Response body: %s", rawOut)
 		}
 		if e != nil {
-			return nil, &APIError{ error: e, Retriable: true }
+			return nil, &APIError{error: e, Retriable: true}
 		}
-		return &SyncResponse{ body: rawOut }, nil
+		return &SyncResponse{body: rawOut}, nil
 	} else if resp.StatusCode == 202 {
 		rawOut, e := ioutil.ReadAll(resp.Body)
 		if e != nil {
-			return nil, &APIError{ error: e, Retriable: true }
+			return nil, &APIError{error: e, Retriable: true}
 		}
 
 		res := &Resource{}
 		e = json.Unmarshal(rawOut, res)
 		if e != nil {
-			return nil, &APIError{ error: e, Retriable: true }
+			return nil, &APIError{error: e, Retriable: true}
 		}
-		return &AsyncResponse{ api: r, ResourceURL: res.URL }, nil
+		return &AsyncResponse{api: r, ResourceURL: res.URL}, nil
 	}
 
 	if resp.StatusCode == 500 {
 		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
 		return nil, &APIError{
-					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
-					Retriable: true,
-					Eref: eref,
-				}
+			error:     errors.New(resp.Header.Get("X-Application-Error-Description")),
+			Retriable: true,
+			Eref:      eref,
+		}
 	} else if resp.StatusCode == 400 {
 		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
 		return nil, &APIError{
-					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
-					Retriable: false,
-					Eref: eref,
-				}
+			error:     errors.New(resp.Header.Get("X-Application-Error-Description")),
+			Retriable: false,
+			Eref:      eref,
+		}
 	} else if resp.StatusCode == 401 {
 		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
 		return nil, &APIError{
-					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
-					Retriable: false,
-					Eref: eref,
-				}
+			error:     errors.New(resp.Header.Get("X-Application-Error-Description")),
+			Retriable: false,
+			Eref:      eref,
+		}
 	} else {
 		return nil, &APIError{
-					error: errors.New(resp.Status),
-					Retriable: false,
-				}
+			error:     errors.New(resp.Status),
+			Retriable: false,
+		}
 	}
 
 }
