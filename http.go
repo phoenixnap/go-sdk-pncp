@@ -13,7 +13,7 @@ import (
 )
 
 // Generic call
-func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, emsg string, retriable bool, eref uint64, err error) {
+func (r *Client) call(method, path, qs string, inBody interface{}) (Future, error) {
 	var (
 		client *http.Client
 		req    *http.Request
@@ -22,6 +22,7 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, 
 		authContext AuthContext
 		reqBody     []byte
 		url         string
+		err         error
 	)
 
 	// Preconditions and sanitize input
@@ -30,7 +31,7 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, 
 	if inBody != nil {
 		reqBody, err = json.Marshal(inBody)
 		if err != nil {
-			return
+			return nil, err
 		}
 	} else {
 		reqBody = nil
@@ -66,14 +67,12 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, 
 		fallthrough
 	case `DELETE`:
 		req, err = constructRequest(method, url, reqBody)
-		break
 	default:
 		err = errors.New(`Unknown method`)
-		return
 	}
 
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	req.Header.Set("Accept", documentType)
@@ -88,12 +87,12 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, 
 
 	resp, err = client.Do(req)
 	if err != nil {
-		return
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if r.Debug {
-		log.Printf("Response status: %s code: %s", resp.Status, resp.StatusCode)
+		log.Printf("Response status: %s code: %d", resp.Status, resp.StatusCode)
 	}
 
 	if resp.StatusCode == 200 {
@@ -102,49 +101,51 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (out Future, 
 			log.Printf("Response body: %s", rawOut)
 		}
 		if e != nil {
-			emsg = e.Error()
-			retriable = true
-			return
+			return nil, &APIError{ error: e, Retriable: true }
 		}
-		out = &SyncResponse{body: rawOut}
+		return &SyncResponse{ body: rawOut }, nil
 	} else if resp.StatusCode == 202 {
 		rawOut, e := ioutil.ReadAll(resp.Body)
 		if e != nil {
-			emsg = e.Error()
-			retriable = true
-			return
+			return nil, &APIError{ error: e, Retriable: true }
 		}
+
 		res := &Resource{}
 		e = json.Unmarshal(rawOut, res)
-		out = &AsyncResponse{
-			api:         r,
-			ResourceURL: res.URL,
-		}
 		if e != nil {
-			emsg = e.Error()
-			retriable = true
-			return
+			return nil, &APIError{ error: e, Retriable: true }
 		}
-	} else {
-		if resp.StatusCode == 500 {
-			emsg = resp.Header.Get("X-Application-Error-Description")
-			eref, _ = strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
-			retriable = true
-		} else if resp.StatusCode == 400 {
-			emsg = resp.Header.Get("X-Application-Error-Description")
-			eref, _ = strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
-			retriable = false
-		} else if resp.StatusCode == 401 {
-			emsg = resp.Header.Get("X-Application-Error-Description")
-			eref, _ = strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
-			retriable = false
-		} else {
-			emsg = resp.Status
-			retriable = false
-		}
+		return &AsyncResponse{ api: r, ResourceURL: res.URL }, nil
 	}
 
-	return
+	if resp.StatusCode == 500 {
+		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
+		return nil, &APIError{
+					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
+					Retriable: true,
+					Eref: eref,
+				}
+	} else if resp.StatusCode == 400 {
+		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
+		return nil, &APIError{
+					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
+					Retriable: false,
+					Eref: eref,
+				}
+	} else if resp.StatusCode == 401 {
+		eref, _ := strconv.ParseUint(resp.Header.Get("X-Application-Error-Reference"), 10, 64)
+		return nil, &APIError{
+					error: errors.New(resp.Header.Get("X-Application-Error-Description")),
+					Retriable: false,
+					Eref: eref,
+				}
+	} else {
+		return nil, &APIError{
+					error: errors.New(resp.Status),
+					Retriable: false,
+				}
+	}
+
 }
 
 func constructRequest(method, url string, body []byte) (*http.Request, error) {

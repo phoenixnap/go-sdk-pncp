@@ -69,12 +69,15 @@ func (ar AsyncResponse) Get(r interface{}) error {
 	// The response has not been retrieved and conditions are correct for retrieval
 	for {
 		// Poll for the task status
-		out, emsg, retriable, _, err := ar.api.call(`GET`, ar.ResourceURL, ``, ``)
+		out, err := ar.api.call(`GET`, ar.ResourceURL, ``, ``)
 		if err != nil {
-			return err
-		}
-		if emsg != `` && !retriable {
-			return errors.New(emsg)
+			if e, isAPIError := err.(APIError); isAPIError && !e.Retriable {
+				return err
+			} else if !isAPIError {
+				return err
+			} else {
+				continue
+			}
 		}
 
 		// Unmarshall the task

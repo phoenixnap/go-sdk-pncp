@@ -14,34 +14,34 @@ const (
 type API interface {
 
 	// Account Resources
-	GetAccountDetails() (Future, string, bool, uint64, error)
+	GetAccountDetails() (Future, error)
 
 	// Virtual Machine Resources
-	ListVirtualMachinesByAccount() (Future, string, bool, uint64, error)
-	ListVirtualMachinesByNode() (Future, string, bool, uint64, error)
-	GetVirtualMachineDetails(id uint64) (Future, string, bool, uint64, error)
-	GetVirtualMachineDetailsURL(url string) (Future, string, bool, uint64, error)
-	CreateVirtualMachine(props CreateVMRequest) (Future, string, bool, uint64, error)
-	SetVirtualMachinePowerState(state string) (Future, string, bool, uint64, error)
-	RebootVirtualMachine(id uint64) (Future, string, bool, uint64, error)
-	CloneVirtualMachine(id uint64) (Future, string, bool, uint64, error)
-	ModifyVirtualMachine(id uint64, props ModifyVMRequest) (Future, string, bool, uint64, error)
-	DeleteVirtualMachine(id uint64, releaseIP bool) (Future, string, bool, uint64, error)
-	GetVirtualMachineTags(id uint64) (Future, string, bool, uint64, error)
-	AddTagToVirtualMachine(id uint64, tag string) (Future, string, bool, uint64, error)
-	RemoveTagFromVirtualMachine(id uint64, tag string) (Future, string, bool, uint64, error)
+	ListVirtualMachinesByAccount() (Future, error)
+	ListVirtualMachinesByNode() (Future, error)
+	GetVirtualMachineDetails(id uint64) (Future, error)
+	GetVirtualMachineDetailsURL(url string) (Future, error)
+	CreateVirtualMachine(props CreateVMRequest) (Future, error)
+	SetVirtualMachinePowerState(state string) (Future, error)
+	RebootVirtualMachine(id uint64) (Future, error)
+	CloneVirtualMachine(id uint64) (Future, error)
+	ModifyVirtualMachine(id uint64, props ModifyVMRequest) (Future, error)
+	DeleteVirtualMachine(id uint64, releaseIP bool) (Future, error)
+	GetVirtualMachineTags(id uint64) (Future, error)
+	AddTagToVirtualMachine(id uint64, tag string) (Future, error)
+	RemoveTagFromVirtualMachine(id uint64, tag string) (Future, error)
 
 	// IP Management Resources
-	ListPublicIPsForVirtualMachine(id uint64) (Future, string, bool, uint64, error)
-	ListPrivateIPsForVirtualMachine(id uint64) (Future, string, bool, uint64, error)
-	GetPublicIPDetailsOnVirtualMachine(id uint64, ip string) (Future, string, bool, uint64, error)
-	GetPrivateIPDetailsOnVirtualMachine(id uint64, ip string) (Future, string, bool, uint64, error)
-	AssignPublicIPToVirtualMachine(id uint64, spec PublicIPSpec) (Future, string, bool, uint64, error)
-	AssignPrivateIPToVirtualMachine(id uint64, spec PrivateIPSpec) (Future, string, bool, uint64, error)
-	ModifyPublicIPOnVirtualMachine(id uint64, ip string, spec PublicIPUpdateSpec) (Future, string, bool, uint64, error)
-	ModifyPrivateIPOnVirtualMachine(id uint64, ip string, spec PrivateIPUpdateSpec) (Future, string, bool, uint64, error)
-	ReleasePublicIPOnVirtualMachine(id uint64, ip string, release bool) (Future, string, bool, uint64, error)
-	ReleasePrivateIPOnVirtualMachine(id uint64, ip string) (Future, string, bool, uint64, error)
+	ListPublicIPsForVirtualMachine(id uint64) (Future, error)
+	ListPrivateIPsForVirtualMachine(id uint64) (Future, error)
+	GetPublicIPDetailsOnVirtualMachine(id uint64, ip string) (Future, error)
+	GetPrivateIPDetailsOnVirtualMachine(id uint64, ip string) (Future, error)
+	AssignPublicIPToVirtualMachine(id uint64, spec PublicIPSpec) (Future, error)
+	AssignPrivateIPToVirtualMachine(id uint64, spec PrivateIPSpec) (Future, error)
+	ModifyPublicIPOnVirtualMachine(id uint64, ip string, spec PublicIPUpdateSpec) (Future, error)
+	ModifyPrivateIPOnVirtualMachine(id uint64, ip string, spec PrivateIPUpdateSpec) (Future, error)
+	ReleasePublicIPOnVirtualMachine(id uint64, ip string, release bool) (Future, error)
+	ReleasePrivateIPOnVirtualMachine(id uint64, ip string) (Future, error)
 
 	// Bare Metal Resources
 	/*
@@ -62,8 +62,8 @@ type API interface {
 	// Firewall Resources
 
 	// OS Template Resources
-	GetListOSTemplates() (Future, string, bool, uint64, error)
-	GetOSTemplateDetails(id uint32) (Future, string, bool, uint64, error)
+	GetListOSTemplates() (Future, error)
+	GetOSTemplateDetails(id uint32) (Future, error)
 
 	Version() string
 }
@@ -104,6 +104,12 @@ func NewClient(endpoint, accountid, key, secret, node string, debug bool) *Clien
 		Debug:          debug,
 		Backoff:        time.Duration(10) * time.Second,
 	}
+}
+
+type APIError struct {
+	error
+	Retriable bool
+	Eref uint64
 }
 
 //
