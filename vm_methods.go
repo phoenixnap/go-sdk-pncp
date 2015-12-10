@@ -19,8 +19,8 @@ func (r *Client) GetVirtualMachineDetails(id uint64) (Future, error) {
 	return r.call(`GET`, path, "", nil)
 }
 
-func (r *Client) GetVirtualMachineDetailsURL(url string) (Future, error) {
-	return r.call(`GET`, url, "", nil)
+func (r *Client) GetVirtualMachineResourceDetails(resource string) (Future, error) {
+	return r.call(`GET`, resource, "", nil)
 }
 
 func (r *Client) CreateVirtualMachine(props CreateVMRequest) (Future, error) {
@@ -39,6 +39,11 @@ func (r *Client) SetVirtualMachinePowerState(state string) (Future, error) {
 
 func (r *Client) RebootVirtualMachine(id uint64) (Future, error) {
 	path := fmt.Sprintf(`/virtualmachine/%s/reboot`, id)
+	return r.call(`PUT`, path, "", nil)
+}
+
+func (r *Client) RebootVirtualMachineResource(resource string) (Future, error) {
+	path := fmt.Sprintf(`%s/reboot`, resource)
 	return r.call(`PUT`, path, "", nil)
 }
 

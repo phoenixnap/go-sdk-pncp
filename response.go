@@ -17,7 +17,7 @@ type Task struct {
 	ProcessDescription    string
 	LatestTaskDescription string
 	Result                Resource
-	ErrorCode             string
+	ErrorCode             uint64
 	ErrorMessage          string
 	LastUpdatedTimestamp  string
 	CreatedTimestamp      string
@@ -86,10 +86,17 @@ func (ar AsyncResponse) Get(r interface{}) error {
 		if err != nil {
 			return err
 		}
-		if resp.RequestStateEnum == `CLOSED_SUCCESSFUL` || resp.RequestStateEnum == `CLOSED_FAILED` {
+		if resp.RequestStateEnum == `CLOSED_SUCCESSFUL` {
 			ar.response = &resp.Result
 			rr.URL = ar.response.URL
 			return nil
+		}
+		if resp.RequestStateEnum == `CLOSED_FAILED` {
+			return APIError{
+				error: errors.New(resp.ErrorMessage),
+				Eref: resp.ErrorCode,
+				Retriable: false,
+			}
 		}
 		time.Sleep(ar.api.Backoff)
 	}

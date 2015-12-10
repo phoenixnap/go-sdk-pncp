@@ -53,7 +53,7 @@ func (r *Client) call(method, path, qs string, inBody interface{}) (Future, erro
 		log.Printf("\tRequestSignature: %s\n", authContext.RequestSignature)
 		log.Printf("\tEncodedCredentials: %s\n", authContext.EncodedCredentials)
 		log.Printf("\tAuthenticator: %s\n", authContext.Authenticator)
-		if reqBody != nil {
+		if inBody != nil {
 			log.Printf("BODY:\n\t%s", reqBody)
 		}
 	}

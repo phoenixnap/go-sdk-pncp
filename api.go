@@ -20,10 +20,11 @@ type API interface {
 	ListVirtualMachinesByAccount() (Future, error)
 	ListVirtualMachinesByNode() (Future, error)
 	GetVirtualMachineDetails(id uint64) (Future, error)
-	GetVirtualMachineDetailsURL(url string) (Future, error)
+	GetVirtualMachineResourceDetails(resource string) (Future, error)
 	CreateVirtualMachine(props CreateVMRequest) (Future, error)
 	SetVirtualMachinePowerState(state string) (Future, error)
 	RebootVirtualMachine(id uint64) (Future, error)
+	RebootVirtualMachineResource(resource string) (Future, error)
 	CloneVirtualMachine(id uint64) (Future, error)
 	ModifyVirtualMachine(id uint64, props ModifyVMRequest) (Future, error)
 	DeleteVirtualMachine(id uint64, releaseIP bool) (Future, error)
@@ -31,12 +32,18 @@ type API interface {
 	AddTagToVirtualMachine(id uint64, tag string) (Future, error)
 	RemoveTagFromVirtualMachine(id uint64, tag string) (Future, error)
 
+	// Network Configuration Services
+	GetNetworkConfiguration() (Future, error)
+
 	// IP Management Resources
 	ListPublicIPsForVirtualMachine(id uint64) (Future, error)
+	ListPublicIPsForVirtualMachineResource(resource string) (Future, error)
 	ListPrivateIPsForVirtualMachine(id uint64) (Future, error)
 	GetPublicIPDetailsOnVirtualMachine(id uint64, ip string) (Future, error)
+	GetPublicIPResourceDetails(resource string) (Future, error)
 	GetPrivateIPDetailsOnVirtualMachine(id uint64, ip string) (Future, error)
 	AssignPublicIPToVirtualMachine(id uint64, spec PublicIPSpec) (Future, error)
+	AssignPublicIPToVirtualMachineResource(resource string, spec PublicIPSpec) (Future, error)
 	AssignPrivateIPToVirtualMachine(id uint64, spec PrivateIPSpec) (Future, error)
 	ModifyPublicIPOnVirtualMachine(id uint64, ip string, spec PublicIPUpdateSpec) (Future, error)
 	ModifyPrivateIPOnVirtualMachine(id uint64, ip string, spec PrivateIPUpdateSpec) (Future, error)
@@ -102,7 +109,7 @@ func NewClient(endpoint, accountid, key, secret, node string, debug bool) *Clien
 		SharedSecret:   secret,
 		NodeID:         node,
 		Debug:          debug,
-		Backoff:        time.Duration(10) * time.Second,
+		Backoff:        time.Duration(3) * time.Second,
 	}
 }
 
@@ -196,8 +203,8 @@ type VMIPMap struct {
 }
 
 type PublicIPSpec struct {
-	IPFromReserved   string `json:"ipFromReserved"`
-	PrivateIPMapping string `json:"privateIpMapping"`
+	IPFromReserved   string `json:"ipFromReserved,omitempty"`
+	PrivateIPMapping string `json:"privateIpMapping,omitempty"`
 }
 
 type PublicIPUpdateSpec struct {
@@ -214,19 +221,31 @@ type PrivateIPUpdateSpec struct {
 }
 
 type PublicIPAssignmentDesc struct {
-	IPAddress    string   `json:"ipAddress"`
-	Type         string   `json:"ipType"`
-	Reserved     bool     `json:"reserved"`
-	AssignedToVM Resource `json:"assignedTo"`
-	PrivateIP    string   `json:"privateIPMapping"`
-	Node         Resource `json:"nodeResource"`
-	Account      Resource `json:"accountResouce"`
+	IPAddress    string     `json:"ipAddress,omitempty"`
+	Type         string     `json:"ipType,omitempty"`
+	Reserved     bool       `json:"reserved,omitempty"`
+	AssignedToVM []Resource `json:"assignedTo,omitempty"`
+	PrivateIP    string     `json:"privateIPMapping,omitempty"`
+	Node         Resource   `json:"nodeResource,omitempty"`
+	Account      Resource   `json:"accountResouce,omitempty"`
 }
 
 type PrivateIPAssignmentDesc struct {
-	IPAddress     string   `json:"ipAddress"`
-	AssignedToVM  Resource `json:"assignedTo"`
-	PublicMapping []string `json:"publicIPMapping"`
-	Node          Resource `json:"nodeResource"`
-	Account       Resource `json:"accountResouce"`
+	IPAddress     string   `json:"ipAddress,omitempty"`
+	AssignedToVM  Resource `json:"assignedTo,omitempty"`
+	PublicMapping []string `json:"publicIPMapping,omitempty"`
+	Node          Resource `json:"nodeResource,omitempty"`
+	Account       Resource `json:"accountResouce,omitempty"`
+}
+
+type NetworkConfigurationDesc struct {
+	Mode                    string   `json:"networkConfig,omitempty"`
+	NetworkStoragePrivateIP string   `json:"networkStoragePrivateIP,omitempty"`
+	Mask                    string   `json:"networkMask,omitempty"`
+	GatewayIP               string   `json:"gatewayIP,omitempty"`
+	DNSServers              []string `json:"dnsServers,omitempty"`
+	PrivateIPRangeFirst     string   `json:"privateIpRangeFirst,omitempty"`
+	PrivateIPRangeLast      string   `json:"privateIpRangeLast,omitempty"`
+	LeaseTimeDefaultSec     int64    `json:"leaseTimeDefaultSecs,omitempty"`
+	LeaseTimeMaxSecs        int64    `json:"leaseTimeMaxSecs,omitempty"`
 }
