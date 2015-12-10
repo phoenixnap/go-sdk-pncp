@@ -28,6 +28,7 @@ type API interface {
 	CloneVirtualMachine(id uint64) (Future, error)
 	ModifyVirtualMachine(id uint64, props ModifyVMRequest) (Future, error)
 	DeleteVirtualMachine(id uint64, releaseIP bool) (Future, error)
+	DeleteVirtualMachineResource(resource string, releaseIP bool) (Future, error)
 	GetVirtualMachineTags(id uint64) (Future, error)
 	AddTagToVirtualMachine(id uint64, tag string) (Future, error)
 	RemoveTagFromVirtualMachine(id uint64, tag string) (Future, error)

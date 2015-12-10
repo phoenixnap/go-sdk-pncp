@@ -59,8 +59,12 @@ func (r *Client) ModifyVirtualMachine(id uint64, props ModifyVMRequest) (Future,
 
 func (r *Client) DeleteVirtualMachine(id uint64, releaseIP bool) (Future, error) {
 	path := fmt.Sprintf(`/virtualmachine/{vmID}`, id)
+	return r.DeleteVirtualMachineResource(path, releaseIP)
+}
+
+func (r *Client) DeleteVirtualMachineResource(resource string, releaseIP bool) (Future, error) {
 	qs := fmt.Sprintf("?releaseIPs=%s", releaseIP)
-	return r.call(`PUT`, path, qs, nil)
+	return r.call(`PUT`, resource, qs, nil)
 }
 
 func (r *Client) GetVirtualMachineTags(id uint64) (Future, error) {
