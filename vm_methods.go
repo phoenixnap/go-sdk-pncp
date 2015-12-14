@@ -28,13 +28,17 @@ func (r *Client) CreateVirtualMachine(props CreateVMRequest) (Future, error) {
 	return r.call(`POST`, path, "", props)
 }
 
-func (r *Client) SetVirtualMachinePowerState(state string) (Future, error) {
+func (r *Client) SetVirtualMachinePowerState(id uint64, state string) (Future, error) {
+	path := fmt.Sprintf(`/virtualmachine/%s/power`, state)
+	return r.SetVirtualMachineResourcePowerState(path, state)
+}
+
+func (r *Client) SetVirtualMachineResourcePowerState(resource, state string) (Future, error) {
 	if state != `on` && state != `off` {
 		panic(`Invalid power state provided`)
 	}
-	path := fmt.Sprintf(`/virtualmachine/%s/power`, state)
 	qs := fmt.Sprintf("?powerState=%s", state)
-	return r.call(`PUT`, path, qs, nil)
+	return r.call(`PUT`, resource, qs, nil)
 }
 
 func (r *Client) RebootVirtualMachine(id uint64) (Future, error) {
