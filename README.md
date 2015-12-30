@@ -1,3 +1,4 @@
+![PhoenixNAP Logo](https://phoenixnap.com/wp-content/themes/phoenixnap-v2/img/v2/logo.svg)
 # pncp-sdk-go
 A Go SDK for the PhoenixNAP Control Plane API.
 
