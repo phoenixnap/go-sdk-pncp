@@ -11,7 +11,7 @@ A Go SDK for the phoenixNAP Control Panel API.
 
 <p align="center">
   <a href="https://phoenixnap.com/bare-metal-cloud">Bare Metal Cloud</a> •
-  <a href="https://developers.phoenixnap.com/docs/bmc/1/overview">API</a> •
+  <a href="https://developers.phoenixnap.com/apis">API</a> •
   <a href="https://developers.phoenixnap.com/">Developers Portal</a> •
   <a href="http://phoenixnap.com/kb">Knowledge Base</a> •
   <a href="https://developers.phoenixnap.com/support">Support</a>
